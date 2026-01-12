@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat to Markdown Converter</title>
+    <meta name="description" content="Gemini・ChatGPTの会話履歴をMarkdownファイルに変換するツール">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="background-gradient"></div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h1>AI Chat to Markdown Converter</h1>
+            </div>
+            <p class="subtitle">Gemini・ChatGPTの会話履歴をMarkdownファイルに変換します</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Drop Zone -->
+            <section class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-content">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <polyline points="17,8 12,3 7,8" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <p class="drop-text">JSONファイルをドラッグ＆ドロップ</p>
+                        <p class="drop-subtext">または</p>
+                        <label class="file-select-btn">
+                            <input type="file" id="fileInput" accept=".json" hidden>
+                            ファイルを選択
+                        </label>
+                    </div>
+                </div>
+                <p class="file-hint">
+                    <span class="hint-icon">💡</span>
+                    Gemini または ChatGPT からエクスポートしたJSONファイルを使用してください<br>
+                    <span class="hint-sub">※ Gemini: 「myactivity.json」「マイアクティビティ.json」 / ChatGPT:
+                        「conversations.json」</span>
+                </p>
+            </section>
+
+            <!-- Export Options -->
+            <section class="options-section" id="optionsSection">
+                <h2 class="section-title">エクスポート設定</h2>
+
+                <div class="option-cards">
+                    <label class="option-card" data-value="per_chat">
+                        <input type="radio" name="exportType" value="per_chat" checked>
+                        <div class="option-content">
+                            <div class="option-icon">📄</div>
+                            <div class="option-info">
+                                <h3>会話ごとに分割</h3>
+                                <p>各会話を個別のMarkdownファイルとして出力</p>
+                            </div>
+                            <div class="option-check">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="option-card" data-value="per_month">
+                        <input type="radio" name="exportType" value="per_month">
+                        <div class="option-content">
+                            <div class="option-icon">📅</div>
+                            <div class="option-info">
+                                <h3>月ごとにまとめる</h3>
+                                <p>同じ月の会話を1つのファイルにまとめて出力</p>
+                            </div>
+                            <div class="option-check">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="option-card" data-value="per_year">
+                        <input type="radio" name="exportType" value="per_year">
+                        <div class="option-content">
+                            <div class="option-icon">📆</div>
+                            <div class="option-info">
+                                <h3>年ごとにまとめる</h3>
+                                <p>同じ年の会話を1つのファイルにまとめて出力</p>
+                            </div>
+                            <div class="option-check">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
+            <!-- File Info & Stats -->
+            <section class="stats-section" id="statsSection">
+                <h2 class="section-title">ファイル情報</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💬</div>
+                        <div class="stat-value" id="totalConversations">0</div>
+                        <div class="stat-label">会話数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value" id="totalMessages">0</div>
+                        <div class="stat-label">メッセージ数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📁</div>
+                        <div class="stat-value" id="outputFiles">0</div>
+                        <div class="stat-label">出力ファイル数</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Convert Button -->
+            <section class="action-section" id="actionSection">
+                <button class="convert-btn" id="convertBtn" disabled>
+                    <span class="btn-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <span class="btn-text">Markdownに変換してダウンロード</span>
+                </button>
+            </section>
+
+            <!-- Progress -->
+            <section class="progress-section" id="progressSection">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">変換中...</p>
+            </section>
+
+            <!-- Result -->
+            <section class="result-section" id="resultSection">
+                <div class="result-icon">✅</div>
+                <h3>変換が完了しました！</h3>
+                <p id="resultText">ダウンロードが自動的に開始されます。</p>
+                <button class="reset-btn" id="resetBtn">別のファイルを変換</button>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Made with ❤️ for Gemini & ChatGPT users</p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
