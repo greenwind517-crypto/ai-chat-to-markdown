@@ -731,9 +731,10 @@ class AIChatConverter {
 
         switch (this.exportType) {
             case 'per_chat':
+                const usedFilenames = new Set();
                 this.conversations.forEach((conv, index) => {
-                    // より適切なファイル名を生成
-                    const filename = this.generateFilename(conv, index, prefix) + '.md';
+                    // より適切なファイル名を生成 (重複チェック付き)
+                    const filename = this.generateFilename(conv, index, prefix, usedFilenames) + '.md';
                     const content = this.conversationToMarkdown(conv);
                     files.push({ filename, content });
                 });
@@ -911,20 +912,50 @@ class AIChatConverter {
     }
 
     sanitizeFilename(name) {
-        return name
+        // Windowsの予約語リスト (大文字・小文字を区別しないコンテキストで考慮)
+        const reservedNames = [
+            'CON', 'PRN', 'AUX', 'NUL',
+            'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+            'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+        ];
+
+        let sanitized = name
             .replace(/[\\/:*?"<>|]/g, '_')
-            .replace(/\s+/g, '_')
+            .replace(/\s+/g, '_') // スペースをアンダースコアに置換
+            .replace(/^_+|_+$/g, '') // 先頭と末尾のアンダースコアを削除
             .substring(0, 100);
+
+        // 空になった場合のフォールバック
+        if (!sanitized) {
+            sanitized = 'untitled';
+        }
+
+        // 予約語チェック（完全一致する場合）
+        if (reservedNames.includes(sanitized.toUpperCase())) {
+            sanitized = `_${sanitized}_`;
+        }
+
+        // 末尾がドットで終わる場合もWindowsで問題になることがあるので削除
+        if (sanitized.endsWith('.')) {
+            sanitized = sanitized.slice(0, -1);
+        }
+
+        return sanitized;
     }
 
     /**
      * 適切なファイル名を生成
      * UUID形式のタイトルの場合は日時ベースやプレフィックス付きの名前にフォールバック
      */
-    generateFilename(conv, index, prefix) {
+    /**
+     * 適切なファイル名を生成
+     * 重複がある場合は連番を付与
+     */
+    generateFilename(conv, index, prefix, usedFilenames) {
+        let baseName = '';
         const title = conv.title;
 
-        // UUIDパターンを検出 (例: 124db277-22cf-49ae-bd3d-00d67e4d6ea5)
+        // UUIDパターンを検出
         const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
         // タイトルが有効かチェック
@@ -934,19 +965,32 @@ class AIChatConverter {
             title !== `会話 ${index + 1}`;
 
         if (isValidTitle) {
-            return this.sanitizeFilename(title);
-        }
-
-        // 日時ベースのファイル名を生成
-        if (conv.createTime) {
+            baseName = this.sanitizeFilename(title);
+        } else if (conv.createTime) {
+            // 日時ベース
             const date = conv.createTime;
             const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
             const timeStr = `${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}`;
-            return `${prefix}_${dateStr}_${timeStr}_${String(index + 1).padStart(3, '0')}`;
+            baseName = `${prefix}_${dateStr}_${timeStr}`;
+        } else {
+            // フォールバック
+            baseName = `${prefix}_conversation`;
+        }
+        
+        // 重複チェックと連番付与
+        let finalName = baseName;
+        let counter = 1;
+
+        while (usedFilenames && usedFilenames.has(finalName)) {
+            finalName = `${baseName}_(${counter})`;
+            counter++;
         }
 
-        // フォールバック: プレフィックス + 連番
-        return `${prefix}_conversation_${String(index + 1).padStart(3, '0')}`;
+        if (usedFilenames) {
+            usedFilenames.add(finalName);
+        }
+
+        return finalName;
     }
 
     formatDate(date) {
