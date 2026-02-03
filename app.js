@@ -922,8 +922,11 @@ class AIChatConverter {
         let sanitized = name
             .replace(/[\\/:*?"<>|]/g, '_')
             .replace(/\s+/g, '_') // スペースをアンダースコアに置換
-            .replace(/^_+|_+$/g, '') // 先頭と末尾のアンダースコアを削除
-            .substring(0, 100);
+            .replace(/^_+|_+$/g, ''); // 先頭と末尾のアンダースコアを削除
+
+        // サロゲートペアを考慮して50文字（約150バイト）で切り詰める
+        // NOTE: Macのファイルシステム制限(255バイト)を回避するため安全マージンを取る
+        sanitized = [...sanitized].slice(0, 50).join('');
 
         // 空になった場合のフォールバック
         if (!sanitized) {
@@ -976,7 +979,7 @@ class AIChatConverter {
             // フォールバック
             baseName = `${prefix}_conversation`;
         }
-        
+
         // 重複チェックと連番付与
         let finalName = baseName;
         let counter = 1;
